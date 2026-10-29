@@ -1,0 +1,33 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "chaoscaiet",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  // Keep the workers.dev URL on. Adding a custom-domain route flips this to
+  // false unless it's set explicitly.
+  "workers_dev": true,
+  // Declared here, not only in the dashboard: wrangler config is
+  // authoritative, so a dashboard-only route gets dropped on deploy.
+  "routes": [
+    {
+      "pattern": "caiet.adhdesigns.dev",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      // OpenNext calls back into its own worker; must match "name".
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "chaoscaiet"
+    }
+  ],
+  // Logs only, no request bodies: entry text never leaves the app.
+  "observability": {
+    "enabled": true
+  }
+}

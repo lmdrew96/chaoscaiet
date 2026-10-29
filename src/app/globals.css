@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+/* Dark follows data-theme on <html>, not the OS, because the toggle owns it. */
+@custom-variant dark (&:where(:root:not([data-theme="light"]), :root:not([data-theme="light"]) *));
+
+/*
+ * ChaosCaiet theme tokens. Components use only the semantic names below,
+ * never a hex. Dark = the approved "2016 dash"; light = the "pastel" artboard.
+ * The pastels aren't ADHDesigns tokens, so this is the one place they live.
+ */
+:root {
+  /* ADHDesigns palette */
+  --muted-indigo: #665c99;
+  --muted-indigo-text: #524a7a;
+  --indigo-void: #140f22;
+  --bone: #ede6d2;
+  --caution-amber: #f2cb05;
+  --dusty-cyan: #5fc2c0;
+  --sage-green: #7fa88c;
+  --magenta: #642644;
+
+  /* Semantic: dark (default) */
+  --ground: var(--muted-indigo);
+  --card: var(--bone);
+  --card-shadow: none;
+  --text: var(--indigo-void);
+  --text-secondary: var(--muted-indigo-text);
+  --placeholder: #5e5687;
+  --on-ground: var(--bone); /* header icons, rail text */
+  --hairline: rgba(20, 15, 34, 0.14); /* on cards */
+  --hairline-ground: rgba(237, 230, 210, 0.24); /* on the ground */
+  --accent: var(--sage-green);
+  --mark-bg: var(--bone);
+  --mark-fg: var(--muted-indigo);
+  --focus-ground: var(--bone);
+  --focus-card: var(--indigo-void);
+
+  --circle-text: var(--indigo-void);
+  --circle-text-fg: var(--bone);
+  --circle-photo: var(--magenta);
+  --circle-photo-fg: var(--bone);
+  --circle-quote: var(--caution-amber);
+  --circle-quote-fg: var(--indigo-void);
+  --circle-link: var(--dusty-cyan);
+  --circle-link-fg: var(--indigo-void);
+  --circle-chat: var(--sage-green);
+  --circle-chat-fg: var(--indigo-void);
+  --ring-gap: var(--bone);
+  --ring: var(--indigo-void);
+
+  --font-sans: "Helvetica Neue", Helvetica, Arial, system-ui, sans-serif;
+  --font-chat: "Courier New", Courier, ui-monospace, monospace;
+
+  color-scheme: dark;
+}
+
+/* Light: "pastel" (Nae, Oct 28) */
+[data-theme="light"] {
+  --ground: #d9d4ec;
+  --card: #fbf8f1;
+  --card-shadow: 0 1px 2px rgba(20, 15, 34, 0.08);
+  --on-ground: var(--indigo-void);
+  --hairline: rgba(20, 15, 34, 0.12);
+  --hairline-ground: rgba(20, 15, 34, 0.18);
+  --accent: #c5dbcb;
+  --mark-bg: var(--indigo-void);
+  --mark-fg: #fbf8f1;
+  --focus-ground: var(--indigo-void);
+
+  --circle-text: #bdb5e0;
+  --circle-text-fg: var(--indigo-void);
+  --circle-photo: #e9bfd3;
+  --circle-photo-fg: var(--indigo-void);
+  --circle-quote: #f7e48c;
+  --circle-link: #b3e2e1;
+  --circle-chat: #c5dbcb;
+  --ring-gap: #fbf8f1;
+
+  color-scheme: light;
+}
+
+@theme inline {
+  --color-ground: var(--ground);
+  --color-card: var(--card);
+  --color-ink: var(--text);
+  --color-ink-secondary: var(--text-secondary);
+  --color-on-ground: var(--on-ground);
+  --color-hairline: var(--hairline);
+  --color-hairline-ground: var(--hairline-ground);
+  --color-accent: var(--accent);
+  --color-mark-bg: var(--mark-bg);
+  --color-mark-fg: var(--mark-fg);
+  --font-sans: var(--font-sans);
+  --font-serif: var(--font-lora), Georgia, serif;
+  --font-chat: var(--font-chat);
+}
+
+body {
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+::placeholder {
+  color: var(--placeholder);
+}
+
+/* Bone ring on the ground, ink ring inside cards. */
+:focus-visible {
+  outline: 2px solid var(--focus-ground);
+  outline-offset: 2px;
+}
+.card :focus-visible {
+  outline-color: var(--focus-card);
+}
+
+.card {
+  background: var(--card);
+  color: var(--text);
+  border-radius: 6px;
+  box-shadow: var(--card-shadow);
+}
+
+/* The 64px square beside every card. */
+.side-square {
+  flex: 0 0 64px;
+  height: 64px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--indigo-void);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--on-ground);
+}
+.nav-icon:hover {
+  background: var(--hairline-ground);
+}

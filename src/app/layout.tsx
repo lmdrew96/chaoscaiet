@@ -12,8 +12,9 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Runs before paint so the light theme never flashes dark first.
-const themeScript = `try{if(localStorage.getItem("caiet:theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}`;
+// Runs before paint so the light theme never flashes dark first. Also reports
+// the browser's timezone, since the Worker runs in UTC (see lib/time.ts).
+const themeScript = `try{if(localStorage.getItem("caiet:theme")==="light")document.documentElement.dataset.theme="light"}catch(e){}try{document.cookie="caiet_tz="+encodeURIComponent(Intl.DateTimeFormat().resolvedOptions().timeZone)+";path=/;max-age=31536000;samesite=lax;secure"}catch(e){}`;
 
 const RootLayout = ({ children }: LayoutProps<"/">): React.ReactNode => (
   <html lang="en" suppressHydrationWarning className={`${lora.variable} h-full antialiased`}>

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ownerFromCookies } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "@/components/logout-button";
+import { WriteButton } from "@/components/write-button";
 
 // Every page in the app lives under this layout, so this check is what makes
 // every route require sign-in. Only /login sits outside it.
@@ -27,6 +28,7 @@ const AppLayout = async ({ children }: LayoutProps<"/">): Promise<React.ReactNod
           <nav className="flex items-center gap-1" aria-label="Main">
             <ThemeToggle />
             <LogoutButton />
+            <WriteButton />
           </nav>
         </div>
       </header>

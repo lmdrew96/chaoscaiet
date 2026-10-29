@@ -1,33 +1,50 @@
 import { Camera, Link2, MessageSquare, Quote, Type, type LucideIcon } from "lucide-react";
+import type { ComposeType, EntryType } from "@/lib/entry-fields";
 
-export type PostType = "text" | "photo" | "quote" | "link" | "chat";
+export const TYPE_META: Record<EntryType, { label: string; icon: LucideIcon }> = {
+  text: { label: "Text", icon: Type },
+  photo: { label: "Photo", icon: Camera },
+  quote: { label: "Quote", icon: Quote },
+  link: { label: "Link", icon: Link2 },
+  chat: { label: "Chat", icon: MessageSquare },
+};
 
-export const POST_TYPES: { type: PostType; label: string; icon: LucideIcon }[] = [
-  { type: "text", label: "Text", icon: Type },
-  { type: "photo", label: "Photo", icon: Camera },
-  { type: "quote", label: "Quote", icon: Quote },
-  { type: "link", label: "Link", icon: Link2 },
-  { type: "chat", label: "Chat", icon: MessageSquare },
-];
+// Era order. Photo joins when photo posts ship.
+const BAR_TYPES: ComposeType[] = ["text", "quote", "link", "chat"];
 
-/** The row of post-type circles at the top of the dash. Compose opens from here. */
-export const PostTypeBar = (): React.ReactNode => (
+/** The row of post-type circles. On the dash it's also the compose header. */
+export const PostTypeBar = ({
+  selected,
+  onPick,
+}: {
+  selected: ComposeType | null;
+  onPick: (type: ComposeType) => void;
+}): React.ReactNode => (
   <div className="flex flex-wrap justify-around gap-1 px-2 py-3.5">
-    {POST_TYPES.map(({ type, label, icon: Icon }) => (
-      <button
-        key={type}
-        type="button"
-        aria-pressed={false}
-        className="flex min-h-16 min-w-[72px] cursor-pointer flex-col items-center gap-1.5 rounded text-[13px]"
-      >
-        <span
-          className="flex h-11 w-11 items-center justify-center rounded-full"
-          style={{ background: `var(--circle-${type})`, color: `var(--circle-${type}-fg)` }}
+    {BAR_TYPES.map((type) => {
+      const { label, icon: Icon } = TYPE_META[type];
+      const on = type === selected;
+      return (
+        <button
+          key={type}
+          type="button"
+          aria-pressed={on}
+          onClick={() => onPick(type)}
+          className={`flex min-h-16 min-w-[72px] cursor-pointer flex-col items-center gap-1.5 rounded text-[13px] ${on ? "font-bold" : ""}`}
         >
-          <Icon size={20} strokeWidth={2} aria-hidden="true" />
-        </span>
-        {label}
-      </button>
-    ))}
+          <span
+            className="flex h-11 w-11 items-center justify-center rounded-full"
+            style={{
+              background: `var(--circle-${type})`,
+              color: `var(--circle-${type}-fg)`,
+              boxShadow: on ? "0 0 0 3px var(--ring-gap), 0 0 0 5px var(--ring)" : "none",
+            }}
+          >
+            <Icon size={20} strokeWidth={2} aria-hidden="true" />
+          </span>
+          {label}
+        </button>
+      );
+    })}
   </div>
 );

@@ -482,7 +482,7 @@ export const Composer = ({
                       className={`${lineInput} font-bold`}
                     />
                   </label>
-                  <label className="flex flex-auto">
+                  <label className="flex min-w-0 flex-auto">
                     <span className={SR}>{`Line ${i + 1}`}</span>
                     <input
                       type="text"

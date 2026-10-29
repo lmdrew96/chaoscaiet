@@ -132,16 +132,19 @@ body {
   box-shadow: var(--card-shadow);
 }
 
-/* The 64px square beside every card. */
-.side-square {
-  flex: 0 0 64px;
-  height: 64px;
-  border-radius: 4px;
-  background: var(--accent);
-  color: var(--indigo-void);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* The 64px square beside every card. In a layer so `max-sm:hidden` can win:
+   on phones the cards and compose go full width. */
+@layer components {
+  .side-square {
+    flex: 0 0 64px;
+    height: 64px;
+    border-radius: 4px;
+    background: var(--accent);
+    color: var(--indigo-void);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 .nav-icon {
@@ -254,6 +257,8 @@ input {
 .compose-fields textarea {
   padding: 6px 8px;
   border-radius: 4px;
+  /* A text field's default width is ~20 characters; let it shrink on narrow screens. */
+  min-width: 0;
 }
 textarea:focus-visible,
 input:focus-visible {

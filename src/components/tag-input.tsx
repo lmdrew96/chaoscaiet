@@ -82,7 +82,7 @@ export const TagInput = ({
   };
 
   return (
-    <div className="relative mx-5 flex flex-wrap items-center gap-1.5 border-t border-hairline py-2.5 text-[13px] text-ink-secondary">
+    <div className="compose-fields relative mx-5 flex flex-wrap items-center gap-1.5 border-t border-hairline py-2.5 text-[13px] text-ink-secondary">
       <Hash size={14} strokeWidth={2} aria-hidden="true" />
       {tags.map((tag) => (
         <span key={tag} className="flex items-center gap-0.5 rounded bg-[var(--hairline)] py-0.5 pl-2 text-ink">

@@ -1,18 +1,18 @@
 import Link from "next/link";
 import { EntryCard } from "./entry-card";
-import type { Entry } from "@/lib/entry-fields";
-import { formatWhen } from "@/lib/time";
+import type { FeedItem } from "@/lib/entries";
+import { formatDay, formatWhen } from "@/lib/time";
 
 /** A page of entry cards with older/newer links. Shared by the dash and tag pages. */
 export const Feed = ({
-  entries,
+  items,
   nextBefore,
   before,
   basePath,
   tz,
   knownTags,
 }: {
-  entries: Entry[];
+  items: FeedItem[];
   nextBefore: string | null;
   before?: Date;
   /** "/" or "/tagged/…": where the older/newer links point. */
@@ -22,11 +22,13 @@ export const Feed = ({
 }): React.ReactNode => (
   <>
     {/* No entries means nothing here: no empty state, nothing that scolds. */}
-    {entries.map((entry) => (
+    {items.map(({ entry, ancestors }) => (
       <EntryCard
-        key={`${entry.id}:${entry.updatedAt}`}
+        key={`${entry.id}:${entry.updatedAt}:${ancestors.length}`}
         entry={entry}
         when={formatWhen(entry.createdAt, tz)}
+        day={formatDay(entry.createdAt, tz)}
+        ancestors={ancestors.map((a) => ({ entry: a, day: formatDay(a.createdAt, tz) }))}
         knownTags={knownTags}
       />
     ))}

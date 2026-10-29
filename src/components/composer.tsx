@@ -118,6 +118,7 @@ const lineInput = "min-h-11 min-w-0 flex-auto border-0 border-b border-hairline 
 
 export const Composer = ({
   editing,
+  layerOf,
   startOpen = false,
   knownTags,
   onDone,
@@ -126,14 +127,18 @@ export const Composer = ({
   knownTags: string[];
   /** Edit mode: the entry being changed. Without it, this is the dash's new-post editor. */
   editing?: Entry;
+  /** Layer mode: the id of the entry this new one is layered on. */
+  layerOf?: string;
   startOpen?: boolean;
   /** Edit mode only: called with the saved entry, or nothing on cancel. */
   onDone?: (saved?: Entry) => void;
+  // Edit and layer modes live inside a card and hand control back via onDone.
 }): React.ReactNode => {
   const router = useRouter();
   // What "unchanged" means in edit mode. Fixed at mount, never set again.
   const [initialDraft] = useState<Draft>(() => (editing ? draftFrom(editing) : emptyDraft()));
-  const [type, setType] = useState<EntryType | null>(editing ? editing.type : startOpen ? "text" : null);
+  const [type, setType] = useState<EntryType | null>(editing ? editing.type : startOpen || layerOf ? "text" : null);
+  const inCard = Boolean(editing || layerOf);
   const [draft, setDraft] = useState<Draft>(initialDraft);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -157,7 +162,7 @@ export const Composer = ({
 
   // The header's write button.
   useEffect(() => {
-    if (editing) return;
+    if (inCard) return;
     const open = (): void => {
       setType((t) => t ?? "text");
       root.current?.scrollIntoView({ block: "nearest" });
@@ -165,7 +170,7 @@ export const Composer = ({
     };
     window.addEventListener("caiet:write", open);
     return () => window.removeEventListener("caiet:write", open);
-  }, [editing]);
+  }, [inCard]);
 
   // Previews of chosen files are object URLs; free each one when it's replaced.
   const preview = draft.photo.file ? draft.photo.preview : null;
@@ -185,13 +190,13 @@ export const Composer = ({
   const close = useCallback((): void => {
     setConfirmDiscard(false);
     setError(null);
-    if (editing) {
+    if (inCard) {
       onDone?.();
       return;
     }
     setDraft(emptyDraft());
     setType(null);
-  }, [editing, onDone]);
+  }, [inCard, onDone]);
 
   const choosePhoto = async (picked: File | undefined): Promise<void> => {
     if (!picked) return;
@@ -265,14 +270,14 @@ export const Composer = ({
       const res = await fetch(editing ? `/api/entries/${editing.id}` : "/api/entries", {
         method: editing ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(check.value),
+        body: JSON.stringify(layerOf ? { ...check.value, layerOf } : check.value),
       });
       const data = await readJson<{ error?: string; entry?: Entry }>(res);
       if (!res.ok || !data.entry) {
         setError(data.error ?? "Couldn't save that. Your text is still here; try again.");
         return;
       }
-      if (editing) {
+      if (inCard) {
         onDone?.(data.entry);
       } else {
         setDraft(emptyDraft());
@@ -305,7 +310,7 @@ export const Composer = ({
       {type && (
         <div className="compose-open border-t border-hairline">
           <div className="px-5 pt-4 pb-1 text-xs tracking-[0.04em] text-ink-secondary">
-            {editing ? `editing ${type} post` : `new ${type} post`}
+            {editing ? `editing ${type} post` : layerOf ? `new ${type} layer` : `new ${type} post`}
           </div>
 
           {type === "photo" && (

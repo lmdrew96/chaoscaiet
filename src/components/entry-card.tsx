@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Repeat2, Trash2 } from "lucide-react";
 import { Composer } from "./composer";
 import { Markdown } from "./markdown";
 import { TYPE_META } from "./post-type-bar";
@@ -94,36 +94,65 @@ const iconButton =
   "flex h-11 w-11 cursor-pointer items-center justify-center rounded text-ink-secondary hover:bg-[var(--hairline)]";
 const outlineButton = "min-h-11 cursor-pointer rounded border border-[var(--control-border)] px-4 text-sm";
 
-/** One entry in the feed, with the square beside it. Edits and deletes in place. */
+/** One entry inside a layered card, under its own small header. */
+const LayerSection = ({ entry, day, label }: { entry: Entry; day: string; label: string }): React.ReactNode => (
+  <section className="border-t border-hairline">
+    <div className="flex items-center gap-2 px-5 pt-3 text-[13px]">
+      <span aria-hidden="true" className="h-[22px] w-[22px] shrink-0 rounded-[3px] bg-accent" />
+      <b>{label}</b>
+      <span className="text-ink-secondary">{day}</span>
+    </div>
+    <Body entry={entry} />
+  </section>
+);
+
+const darkButton =
+  "min-h-11 cursor-pointer rounded bg-[var(--indigo-void)] px-4 text-sm font-semibold text-[var(--bone)] disabled:opacity-60";
+
+/**
+ * One entry in the feed, with the square beside it. A layer shows its whole
+ * chain flat, oldest first. Edit, delete and "add a layer" all happen in place.
+ */
 export const EntryCard = ({
   entry: initial,
   when,
+  day,
+  ancestors,
   knownTags,
 }: {
   entry: Entry;
+  /** "oct 28 · 9:14pm", for a card that isn't a layer. */
   when: string;
+  /** "today" / "oct 28", for this entry's layer header. */
+  day: string;
+  /** What this entry is layered on, oldest first, each with its header day. */
+  ancestors: { entry: Entry; day: string }[];
   knownTags: string[];
 }): React.ReactNode => {
   const router = useRouter();
   // The saved copy shows right away; the feed's refresh then re-keys this card.
   const [entry, setEntry] = useState(initial);
-  const [mode, setMode] = useState<"view" | "edit" | "confirmDelete">("view");
+  const [mode, setMode] = useState<"view" | "edit" | "layer" | "confirmDelete">("view");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gone, setGone] = useState(false);
   const Icon = TYPE_META[entry.type].icon;
+  const layered = ancestors.length > 0;
+  const count = ancestors.length + 1;
 
-  const remove = async (): Promise<void> => {
+  const remove = async (scope: "one" | "thread"): Promise<void> => {
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/entries/${entry.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/entries/${entry.id}${scope === "thread" ? "?scope=thread" : ""}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await readJson<{ error?: string }>(res);
         setError(data.error ?? "Couldn't delete that. Try again.");
         return;
       }
-      setGone(true);
+      // Deleting only the newest layer leaves the rest of the chain: let the refresh show it.
+      if (scope === "thread" || !layered) setGone(true);
+      setMode("view");
       router.refresh();
     } catch (err) {
       console.error("delete entry failed", err);
@@ -140,22 +169,41 @@ export const EntryCard = ({
       <div className="side-square max-sm:hidden" aria-hidden="true">
         <Icon size={28} strokeWidth={2} />
       </div>
-      <article className="card min-w-0 flex-auto overflow-hidden">
+      <article className="card min-w-0 flex-auto">
+        {layered && (
+          <div className="flex items-center gap-2 px-5 pt-3.5 pb-2.5 text-[13px]">
+            <b>you</b>
+            <Repeat2 size={14} strokeWidth={2} aria-hidden="true" className="text-ink-secondary" />
+            <span className="text-ink-secondary">past you</span>
+          </div>
+        )}
+        {ancestors.map((a) => (
+          <LayerSection key={a.entry.id} entry={a.entry} day={a.day} label="past you" />
+        ))}
+
         {mode === "edit" ? (
-          <Composer
-            editing={entry}
-            knownTags={knownTags}
-            onDone={(saved) => {
-              if (saved) setEntry(saved);
-              setMode("view");
-            }}
-          />
+          <div className={layered ? "border-t border-hairline" : ""}>
+            <Composer
+              editing={entry}
+              knownTags={knownTags}
+              onDone={(saved) => {
+                if (saved) setEntry(saved);
+                setMode("view");
+              }}
+            />
+          </div>
         ) : (
           <>
-            <div className="px-5 pt-3.5 pb-1 text-[13px]">
-              <b>you</b>
-            </div>
-            <Body entry={entry} />
+            {layered ? (
+              <LayerSection entry={entry} day={day} label="you" />
+            ) : (
+              <>
+                <div className="px-5 pt-3.5 pb-1 text-[13px]">
+                  <b>you</b>
+                </div>
+                <Body entry={entry} />
+              </>
+            )}
             {entry.tags.length > 0 && (
               <ul className="m-0 flex list-none flex-wrap gap-x-2 px-5 pb-3 text-[13px]" aria-label="Tags">
                 {entry.tags.map((tag) => (
@@ -172,45 +220,66 @@ export const EntryCard = ({
                 {error}
               </p>
             )}
-            <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline py-2 pr-3 pl-5 text-[13px]">
-              {mode === "confirmDelete" ? (
-                <>
-                  <span role="status">delete this entry? it can&apos;t be undone.</span>
-                  <div className="flex gap-2">
-                    <button type="button" autoFocus onClick={() => setMode("view")} className={outlineButton}>
-                      keep it
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void remove()}
-                      disabled={busy}
-                      className="min-h-11 cursor-pointer rounded bg-[var(--indigo-void)] px-4 text-sm font-semibold text-[var(--bone)] disabled:opacity-60"
-                    >
-                      {busy ? "deleting…" : "delete"}
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <time dateTime={entry.createdAt} className="text-ink-secondary">
-                    {when}
-                  </time>
-                  <div className="flex">
-                    <button type="button" aria-label="Edit entry" onClick={() => setMode("edit")} className={iconButton}>
-                      <Pencil size={20} strokeWidth={2} />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Delete entry"
-                      onClick={() => setMode("confirmDelete")}
-                      className={iconButton}
-                    >
-                      <Trash2 size={20} strokeWidth={2} />
-                    </button>
-                  </div>
-                </>
-              )}
-            </footer>
+
+            {mode === "layer" ? (
+              <div className="border-t border-hairline">
+                <Composer layerOf={entry.id} knownTags={knownTags} onDone={() => setMode("view")} />
+              </div>
+            ) : (
+              <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline py-2 pr-3 pl-5 text-[13px]">
+                {mode === "confirmDelete" ? (
+                  <>
+                    <span role="status">
+                      {layered ? `delete just this layer, or all ${count}?` : "delete this entry? it can't be undone."}
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="button" autoFocus onClick={() => setMode("view")} className={outlineButton}>
+                        keep it
+                      </button>
+                      {layered && (
+                        <button type="button" onClick={() => void remove("one")} disabled={busy} className={outlineButton}>
+                          delete just this layer
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => void remove(layered ? "thread" : "one")}
+                        disabled={busy}
+                        className={darkButton}
+                      >
+                        {busy ? "deleting…" : layered ? `delete all ${count}` : "delete"}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    {layered ? (
+                      <span className="font-semibold">{count} layers</span>
+                    ) : (
+                      <time dateTime={entry.createdAt} className="text-ink-secondary">
+                        {when}
+                      </time>
+                    )}
+                    <div className="flex">
+                      <button type="button" aria-label="Add a layer" onClick={() => setMode("layer")} className={iconButton}>
+                        <Repeat2 size={20} strokeWidth={2} />
+                      </button>
+                      <button type="button" aria-label="Edit entry" onClick={() => setMode("edit")} className={iconButton}>
+                        <Pencil size={20} strokeWidth={2} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Delete entry"
+                        onClick={() => setMode("confirmDelete")}
+                        className={iconButton}
+                      >
+                        <Trash2 size={20} strokeWidth={2} />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </footer>
+            )}
           </>
         )}
       </article>

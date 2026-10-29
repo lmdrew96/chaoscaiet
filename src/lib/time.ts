@@ -43,3 +43,10 @@ export const formatWhen = (iso: string, tz: string, now = new Date()): string =>
   const date = `${p.month.toLowerCase()} ${p.day}${p.year === thisYear ? "" : `, ${p.year}`}`;
   return `${date} · ${p.hour}:${p.minute}${p.dayPeriod.toLowerCase()}`;
 };
+
+/** Layer headers: "today", "oct 28", or "oct 28, 2025" when it isn't this year. */
+export const formatDay = (iso: string, tz: string, now = new Date()): string => {
+  const day = (d: Date): string => new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(d); // YYYY-MM-DD
+  if (day(new Date(iso)) === day(now)) return "today";
+  return formatWhen(iso, tz, now).split(" · ")[0];
+};

@@ -8,7 +8,7 @@ import { ownerTimeZone } from "@/lib/time";
 const DashPage = async ({ searchParams }: PageProps<"/">): Promise<React.ReactNode> => {
   const sp = await searchParams;
   const before = parseBefore(sp.before);
-  const [{ entries, nextBefore }, tags, tz] = await Promise.all([listFeed({ before }), listTags(), ownerTimeZone()]);
+  const [{ items, nextBefore }, tags, tz] = await Promise.all([listFeed({ before }), listTags(), ownerTimeZone()]);
   const knownTags = tags.map((t) => t.tag);
 
   return (
@@ -21,7 +21,7 @@ const DashPage = async ({ searchParams }: PageProps<"/">): Promise<React.ReactNo
           <Composer startOpen={sp.write !== undefined} knownTags={knownTags} />
         </div>
       </div>
-      <Feed entries={entries} nextBefore={nextBefore} before={before} basePath="/" tz={tz} knownTags={knownTags} />
+      <Feed items={items} nextBefore={nextBefore} before={before} basePath="/" tz={tz} knownTags={knownTags} />
     </Columns>
   );
 };

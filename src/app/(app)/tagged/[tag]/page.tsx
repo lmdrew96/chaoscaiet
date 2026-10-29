@@ -19,7 +19,7 @@ const TaggedPage = async ({ params, searchParams }: PageProps<"/tagged/[tag]">):
   const [{ tag: raw }, sp] = await Promise.all([params, searchParams]);
   const tag = normalizeTag(safeDecode(raw));
   const before = parseBefore(sp.before);
-  const [{ entries, nextBefore }, tags, tz] = await Promise.all([listFeed({ before, tag }), listTags(), ownerTimeZone()]);
+  const [{ items, nextBefore }, tags, tz] = await Promise.all([listFeed({ before, tag }), listTags(), ownerTimeZone()]);
 
   return (
     <Columns tags={tags}>
@@ -30,7 +30,7 @@ const TaggedPage = async ({ params, searchParams }: PageProps<"/tagged/[tag]">):
         <h1 className="m-0 min-w-0 font-serif text-[28px] font-semibold break-words text-on-ground">#{tag}</h1>
       </div>
       <Feed
-        entries={entries}
+        items={items}
         nextBefore={nextBefore}
         before={before}
         basePath={tagHref(tag)}

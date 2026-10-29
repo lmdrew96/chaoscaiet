@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Pencil, Repeat2, Trash2 } from "lucide-react";
+import { History, Pencil, Repeat2, Trash2 } from "lucide-react";
 import { Composer } from "./composer";
 import { Markdown } from "./markdown";
 import { TYPE_META } from "./post-type-bar";
@@ -112,6 +112,7 @@ const darkButton =
 /**
  * One entry in the feed, with the square beside it. A layer shows its whole
  * chain flat, oldest first. Edit, delete and "add a layer" all happen in place.
+ * `highlight` puts a sage band on top ("on this day · 1 year ago").
  */
 export const EntryCard = ({
   entry: initial,
@@ -119,6 +120,9 @@ export const EntryCard = ({
   day,
   ancestors,
   knownTags,
+  highlight,
+  startLayer = false,
+  layeredHref,
 }: {
   entry: Entry;
   /** "oct 28 · 9:14pm", for a card that isn't a layer. */
@@ -128,11 +132,16 @@ export const EntryCard = ({
   /** What this entry is layered on, oldest first, each with its header day. */
   ancestors: { entry: Entry; day: string }[];
   knownTags: string[];
+  highlight?: string;
+  /** Open with the layer composer already showing. */
+  startLayer?: boolean;
+  /** Where to go once a layer is saved (the entry page sends you to the dash). */
+  layeredHref?: string;
 }): React.ReactNode => {
   const router = useRouter();
   // The saved copy shows right away; the feed's refresh then re-keys this card.
   const [entry, setEntry] = useState(initial);
-  const [mode, setMode] = useState<"view" | "edit" | "layer" | "confirmDelete">("view");
+  const [mode, setMode] = useState<"view" | "edit" | "layer" | "confirmDelete">(startLayer ? "layer" : "view");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gone, setGone] = useState(false);
@@ -170,6 +179,12 @@ export const EntryCard = ({
         <Icon size={28} strokeWidth={2} />
       </div>
       <article className="card min-w-0 flex-auto">
+        {highlight && (
+          <div className="flex items-center gap-2 rounded-t-[6px] bg-accent px-5 py-2 text-[13px] font-semibold text-[var(--indigo-void)]">
+            <History size={14} strokeWidth={2} aria-hidden="true" />
+            {highlight}
+          </div>
+        )}
         {layered && (
           <div className="flex items-center gap-2 px-5 pt-3.5 pb-2.5 text-[13px]">
             <b>you</b>
@@ -223,7 +238,14 @@ export const EntryCard = ({
 
             {mode === "layer" ? (
               <div className="border-t border-hairline">
-                <Composer layerOf={entry.id} knownTags={knownTags} onDone={() => setMode("view")} />
+                <Composer
+                  layerOf={entry.id}
+                  knownTags={knownTags}
+                  onDone={(saved) => {
+                    setMode("view");
+                    if (saved && layeredHref) router.push(layeredHref);
+                  }}
+                />
               </div>
             ) : (
               <footer className="flex flex-wrap items-center justify-between gap-3 border-t border-hairline py-2 pr-3 pl-5 text-[13px]">

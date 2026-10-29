@@ -211,7 +211,7 @@ export const Composer = ({
                   value={draft.body}
                   onChange={(e) => set("body", e.target.value)}
                   placeholder="one line is enough."
-                  className="flex-auto resize-y border-0 bg-transparent text-[15px] leading-relaxed"
+                  className="flex-auto resize-y border-0 bg-transparent text-[15px] leading-relaxed pointer-coarse:text-base"
                 />
               </label>
             </div>
@@ -237,7 +237,7 @@ export const Composer = ({
                   value={draft.source}
                   onChange={(e) => set("source", e.target.value)}
                   placeholder="— source (optional)"
-                  className="min-h-11 flex-auto border-0 border-b border-hairline bg-transparent text-sm"
+                  className="min-h-11 flex-auto border-0 border-b border-hairline bg-transparent text-sm pointer-coarse:text-base"
                 />
               </label>
             </div>
@@ -255,7 +255,7 @@ export const Composer = ({
                   value={draft.url}
                   onChange={(e) => set("url", e.target.value)}
                   placeholder="paste a link"
-                  className="min-h-11 flex-auto border-0 border-b border-hairline bg-transparent text-[15px]"
+                  className="min-h-11 flex-auto border-0 border-b border-hairline bg-transparent text-[15px] pointer-coarse:text-base"
                 />
               </label>
               <label className="flex">
@@ -275,7 +275,7 @@ export const Composer = ({
                   value={draft.body}
                   onChange={(e) => set("body", e.target.value)}
                   placeholder="why you're keeping it (optional)"
-                  className="flex-auto resize-y border-0 bg-transparent text-[15px] leading-relaxed"
+                  className="flex-auto resize-y border-0 bg-transparent text-[15px] leading-relaxed pointer-coarse:text-base"
                 />
               </label>
             </div>

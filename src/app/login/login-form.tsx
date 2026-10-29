@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { readJson } from "@/lib/read-json";
 
-const inputClass = "min-h-11 rounded border border-hairline bg-transparent px-3 text-[15px]";
+const inputClass = "min-h-11 rounded border border-hairline bg-transparent px-3 text-[15px] pointer-coarse:text-base";
 
 export const LoginForm = (): React.ReactNode => {
   const router = useRouter();

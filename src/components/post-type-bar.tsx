@@ -1,5 +1,5 @@
 import { Camera, Link2, MessageSquare, Quote, Type, type LucideIcon } from "lucide-react";
-import type { ComposeType, EntryType } from "@/lib/entry-fields";
+import type { EntryType } from "@/lib/entry-fields";
 
 export const TYPE_META: Record<EntryType, { label: string; icon: LucideIcon }> = {
   text: { label: "Text", icon: Type },
@@ -9,16 +9,15 @@ export const TYPE_META: Record<EntryType, { label: string; icon: LucideIcon }> =
   chat: { label: "Chat", icon: MessageSquare },
 };
 
-// Era order. Photo joins when photo posts ship.
-const BAR_TYPES: ComposeType[] = ["text", "quote", "link", "chat"];
+const BAR_TYPES: EntryType[] = ["text", "photo", "quote", "link", "chat"];
 
 /** The row of post-type circles. On the dash it's also the compose header. */
 export const PostTypeBar = ({
   selected,
   onPick,
 }: {
-  selected: ComposeType | null;
-  onPick: (type: ComposeType) => void;
+  selected: EntryType | null;
+  onPick: (type: EntryType) => void;
 }): React.ReactNode => (
   <div className="flex flex-wrap justify-around gap-1 px-2 py-3.5">
     {BAR_TYPES.map((type) => {

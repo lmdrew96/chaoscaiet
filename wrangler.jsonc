@@ -19,6 +19,15 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  // Private photo bucket: no public access, no r2.dev URL. Every read goes
+  // through /api/photos, which checks the session. `next dev` simulates this
+  // binding locally (.wrangler/state), so dev photos never touch the real bucket.
+  "r2_buckets": [
+    {
+      "binding": "PHOTOS",
+      "bucket_name": "chaoscaiet-photos"
+    }
+  ],
   "services": [
     {
       // OpenNext calls back into its own worker; must match "name".

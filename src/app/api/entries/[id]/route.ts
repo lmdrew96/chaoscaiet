@@ -1,5 +1,5 @@
 import { ownerGate } from "@/lib/auth";
-import { deleteEntry, isUuid, updateEntry } from "@/lib/entries";
+import { MISSING_PHOTO, deleteEntry, isMissingPhoto, isUuid, updateEntry } from "@/lib/entries";
 import { validateEntry } from "@/lib/entry-fields";
 
 const notFound = (): Response => Response.json({ error: "That entry isn't here anymore." }, { status: 404 });
@@ -21,6 +21,7 @@ export const PATCH = async (req: Request, ctx: RouteContext<"/api/entries/[id]">
   if (!result.ok) return Response.json({ error: result.error }, { status: 400 });
 
   try {
+    if (await isMissingPhoto(result.value)) return Response.json({ error: MISSING_PHOTO }, { status: 400 });
     const entry = await updateEntry(id, result.value);
     return entry ? Response.json({ entry }) : notFound();
   } catch (err) {

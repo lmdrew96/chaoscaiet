@@ -7,7 +7,7 @@ import { Composer } from "./composer";
 import { Markdown } from "./markdown";
 import { TYPE_META } from "./post-type-bar";
 import { readJson } from "@/lib/read-json";
-import type { Entry } from "@/lib/entry-fields";
+import { photoUrl, type Entry } from "@/lib/entry-fields";
 
 const linkLabel = (url: string): string => {
   try {
@@ -66,6 +66,24 @@ const Body = ({ entry }: { entry: Entry }): React.ReactNode => {
             <span className="text-[13px] break-all text-ink-secondary">{linkLabel(entry.fields.url)}</span>
           )}
           {entry.fields.note && <Markdown>{entry.fields.note}</Markdown>}
+        </div>
+      );
+    case "photo":
+      return (
+        <div className="flex flex-col gap-3 pt-2 pb-3">
+          {/* Plain img: photos sit behind the session route, which next/image's optimizer can't reach. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={photoUrl(entry.fields.key)}
+            alt={entry.fields.caption ? entry.fields.caption.slice(0, 200) : "A photo"}
+            loading="lazy"
+            className="block w-full bg-[var(--hairline)]"
+          />
+          {entry.fields.caption && (
+            <div className="px-5">
+              <Markdown>{entry.fields.caption}</Markdown>
+            </div>
+          )}
         </div>
       );
   }

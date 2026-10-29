@@ -124,7 +124,7 @@ Follows Cody's standing stack:
 - **Hosting: Cloudflare Workers** (every new project). Edge runtime limits apply: confirm Node built-ins and package support in Cloudflare's docs before relying on them.
 - **Database: Neon Postgres.** Drizzle or raw SQL is Cody's call; state it in the first PR.
 - **Auth: hand-rolled session auth** (Nae). PBKDF2 via Web Crypto, opaque session IDs in Upstash Redis behind an HttpOnly cookie. **Port `lib/auth.ts` from personal-context-mcp / Tangle / Kindling; don't rewrite it.** Every route requires sign-in; no public pages in v1.
-- **Photos:** Cloudflare R2, private bucket, signed URLs for every read (same pattern as ChaosPatch's `lib/r2.ts` and the Vertex attachment spec). HEIC converted to JPEG in the browser before upload.
+- **Photos:** Cloudflare R2, private bucket through a native Worker binding; every read goes through a session-checked route instead of signed URLs (built Oct 28; a binding has no signing step, and a session check is stricter). HEIC converted to JPEG in the browser before upload.
 - **No MCP server** in v1 (Nae).
 - **No in-app Claude calls** in v1 (no AI features).
 

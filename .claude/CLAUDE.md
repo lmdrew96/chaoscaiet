@@ -20,7 +20,7 @@ A **private, single-user personal journal** for Nae that looks and works like a 
 - Every route requires sign-in. No public pages, no share links, no OG/preview images of entries.
 - Nothing sends entry text off the app: **no MCP server, no in-app Claude API calls, no analytics, no third-party error tracking that captures request bodies.** (Overrides the top-level Claude-model default: there are no Claude calls here.)
 - Link posts don't fetch or unfurl the linked site.
-- Photos: private R2 bucket, signed URLs for every read, never public.
+- Photos: private R2 bucket via the `PHOTOS` binding, never public. Every read goes through `/api/photos/[name]`, which checks the session (stricter than signed URLs, which work for anyone holding the link).
 
 ## Auth
 Hand-rolled session auth, ported from personal-context-mcp / Tangle / Kindling `lib/auth.ts`. Port it; don't rewrite it. Single user.

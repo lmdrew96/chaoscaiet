@@ -1,5 +1,5 @@
 import { ownerGate } from "@/lib/auth";
-import { createEntry } from "@/lib/entries";
+import { MISSING_PHOTO, createEntry, isMissingPhoto } from "@/lib/entries";
 import { validateEntry } from "@/lib/entry-fields";
 
 export const POST = async (req: Request): Promise<Response> => {
@@ -17,6 +17,7 @@ export const POST = async (req: Request): Promise<Response> => {
   if (!result.ok) return Response.json({ error: result.error }, { status: 400 });
 
   try {
+    if (await isMissingPhoto(result.value)) return Response.json({ error: MISSING_PHOTO }, { status: 400 });
     return Response.json({ entry: await createEntry(result.value) }, { status: 201 });
   } catch (err) {
     console.error("create entry failed", err);

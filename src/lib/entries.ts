@@ -2,7 +2,8 @@ import "server-only";
 import { desc, eq, lt } from "drizzle-orm";
 import { db } from "@/db";
 import { entries } from "@/db/schema";
-import type { Entry, EntryInput } from "./entry-fields";
+import type { Entry, EntryInput, PhotoFields } from "./entry-fields";
+import { deletePhoto, photoExists } from "./photos";
 
 type Row = typeof entries.$inferSelect;
 
@@ -39,19 +40,40 @@ export const createEntry = async (input: EntryInput): Promise<Entry> => {
   return toEntry(row);
 };
 
-/** Null when there's no such entry. Photo entries aren't editable here yet. */
+const photoKeyOf = (e: { type: string; fields: unknown }): string | null =>
+  e.type === "photo" ? (e.fields as PhotoFields).key : null;
+
+export const MISSING_PHOTO = "That photo didn't finish uploading. Choose it again.";
+
+/** True when a photo entry points at an object that isn't in the bucket. */
+export const isMissingPhoto = async (input: EntryInput): Promise<boolean> =>
+  input.type === "photo" && !(await photoExists(input.fields.key));
+
+/**
+ * Null when there's no such entry. A photo that the edit replaced (or dropped
+ * by switching type) is deleted from the bucket afterwards.
+ */
 export const updateEntry = async (id: string, input: EntryInput): Promise<Entry | null> => {
+  const [previous] = await db.select({ type: entries.type, fields: entries.fields }).from(entries).where(eq(entries.id, id));
+  if (!previous) return null;
   const [row] = await db
     .update(entries)
     .set({ type: input.type, fields: input.fields, updatedAt: new Date() })
     .where(eq(entries.id, id))
     .returning();
-  return row ? toEntry(row) : null;
+  if (!row) return null;
+  const oldKey = photoKeyOf(previous);
+  if (oldKey && oldKey !== photoKeyOf(input)) await deletePhoto(oldKey);
+  return toEntry(row);
 };
 
+/** Deleting a photo entry deletes its object too. */
 export const deleteEntry = async (id: string): Promise<boolean> => {
-  const rows = await db.delete(entries).where(eq(entries.id, id)).returning({ id: entries.id });
-  return rows.length > 0;
+  const [row] = await db.delete(entries).where(eq(entries.id, id)).returning({ type: entries.type, fields: entries.fields });
+  if (!row) return false;
+  const key = photoKeyOf(row);
+  if (key) await deletePhoto(key);
+  return true;
 };
 
 export const isUuid = (s: string): boolean =>

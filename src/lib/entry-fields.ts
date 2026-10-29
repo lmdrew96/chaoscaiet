@@ -7,9 +7,6 @@
 
 export type EntryType = "text" | "quote" | "chat" | "link" | "photo";
 
-/** The types compose can write today. Photo arrives with its own patch. */
-export type ComposeType = Exclude<EntryType, "photo">;
-
 export interface TextFields {
   title?: string;
   body: string; // markdown
@@ -35,13 +32,19 @@ export interface LinkFields {
   note?: string; // markdown
 }
 
-export type EntryFields = TextFields | QuoteFields | ChatFields | LinkFields;
+export interface PhotoFields {
+  key: string; // R2 object key: photos/{uuid}.{ext}
+  caption?: string; // markdown
+}
+
+export type EntryFields = TextFields | QuoteFields | ChatFields | LinkFields | PhotoFields;
 
 export type EntryInput =
   | { type: "text"; fields: TextFields }
   | { type: "quote"; fields: QuoteFields }
   | { type: "chat"; fields: ChatFields }
-  | { type: "link"; fields: LinkFields };
+  | { type: "link"; fields: LinkFields }
+  | { type: "photo"; fields: PhotoFields };
 
 /** What the API sends and the feed renders. Timestamps are ISO strings in UTC. */
 export type Entry = EntryInput & {
@@ -52,7 +55,24 @@ export type Entry = EntryInput & {
   updatedAt: string;
 };
 
-export const COMPOSE_TYPES: readonly ComposeType[] = ["text", "quote", "chat", "link"];
+// ─── Photos ──────────────────────────────────────────────────────────────────
+
+export const MAX_PHOTO_BYTES = 10 * 1024 * 1024; // 10 MB, same as ChaosPatch
+
+/** What the bucket accepts, by content type. HEIC is converted in the browser first. */
+export const PHOTO_TYPES: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
+
+/** The file part of a photo key, which is also its URL segment: /api/photos/{name}. */
+export const PHOTO_NAME_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|png|webp|gif)$/;
+
+export const photoUrl = (key: string): string => `/api/photos/${key.replace(/^photos\//, "")}`;
+
+const isPhotoKey = (key: string): boolean => key.startsWith("photos/") && PHOTO_NAME_RE.test(key.slice(7));
 
 // Generous ceilings that only exist so one request can't be enormous.
 const MAX_LONG = 100_000;
@@ -130,6 +150,14 @@ export const validateEntry = (raw: unknown): Result => {
         return { ok: false, error: "That's too long to save in one entry." };
       }
       return { ok: true, value: { type, fields: { url, linkTitle, note } } };
+    }
+    case "photo": {
+      const key = str(f.key);
+      const caption = optional(f.caption);
+      if (!key) return { ok: false, error: "Choose a photo first." };
+      if (!isPhotoKey(key)) return { ok: false, error: "That photo didn't upload properly. Try choosing it again." };
+      if (tooLong(caption, MAX_LONG)) return { ok: false, error: "That's too long to save in one entry." };
+      return { ok: true, value: { type, fields: { key, caption } } };
     }
     default:
       return { ok: false, error: "Unknown post type." };

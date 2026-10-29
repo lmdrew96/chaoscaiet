@@ -60,7 +60,7 @@ const FromTheArchive = ({ entry, day }: { entry: Entry; day: string }): React.Re
   <section className="flex flex-col gap-2.5">
     <h2 className={railHeading}>From the archive</h2>
     <div className="card flex flex-col gap-1.5 px-4 py-3.5 text-sm leading-normal">
-      <Link href={`/entry/${entry.id}`} className="flex min-h-6 items-center text-xs text-ink-secondary hover:underline">
+      <Link href={`/entry/${entry.id}`} className="flex min-h-6 items-center text-xs text-ink-secondary hover:underline pointer-coarse:min-h-11">
         random entry · {day}
       </Link>
       <div className="flex max-h-48 flex-col gap-1.5 overflow-hidden [&_.md]:text-sm">
@@ -89,14 +89,14 @@ export const Rail = ({
         <ul className="m-0 flex list-none flex-col p-0 text-sm">
           {tags.slice(0, RAIL_TAGS).map(({ tag }) => (
             <li key={tag}>
-              <Link href={tagHref(tag)} className="flex min-h-9 items-center hover:underline">
+              <Link href={tagHref(tag)} className="flex min-h-9 items-center hover:underline pointer-coarse:min-h-11">
                 #{tag}
               </Link>
             </li>
           ))}
         </ul>
         {tags.length > RAIL_TAGS && (
-          <Link href="/tags" className="text-[13px] underline">
+          <Link href="/tags" className="flex min-h-11 items-center self-start text-[13px] underline">
             all {tags.length} tags
           </Link>
         )}

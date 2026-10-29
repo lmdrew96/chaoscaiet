@@ -59,7 +59,7 @@ const Body = ({ entry }: { entry: Entry }): React.ReactNode => {
             href={entry.fields.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-lg font-semibold break-words underline"
+            className="text-lg font-semibold break-words underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:items-center"
           >
             {entry.fields.linkTitle ?? linkLabel(entry.fields.url)}
           </a>
@@ -223,7 +223,10 @@ export const EntryCard = ({
               <ul className="m-0 flex list-none flex-wrap gap-x-2 px-5 pb-3 text-[13px]" aria-label="Tags">
                 {entry.tags.map((tag) => (
                   <li key={tag}>
-                    <Link href={tagHref(tag)} className="text-ink-secondary hover:underline">
+                    <Link
+                      href={tagHref(tag)}
+                      className="text-ink-secondary hover:underline pointer-coarse:flex pointer-coarse:min-h-11 pointer-coarse:min-w-11 pointer-coarse:items-center"
+                    >
                       #{tag}
                     </Link>
                   </li>

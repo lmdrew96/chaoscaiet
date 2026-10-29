@@ -91,7 +91,7 @@ export const TagInput = ({
             type="button"
             onClick={() => onTags(tags.filter((t) => t !== tag))}
             aria-label={`Remove tag ${tag}`}
-            className="flex h-7 w-7 cursor-pointer items-center justify-center rounded"
+            className="relative flex h-7 w-7 cursor-pointer items-center justify-center rounded pointer-coarse:after:absolute pointer-coarse:after:-inset-2"
           >
             <X size={14} strokeWidth={2} />
           </button>
@@ -113,7 +113,7 @@ export const TagInput = ({
           onFocus={() => setOpen(true)}
           onBlur={() => setOpen(false)}
           placeholder={tags.length ? "another tag" : "add tags: quiet day, school, nugget being a menace"}
-          className="min-h-10 flex-auto border-0 bg-transparent text-[13px] text-ink pointer-coarse:text-base"
+          className="min-h-10 flex-auto border-0 pointer-coarse:min-h-11 bg-transparent text-[13px] text-ink pointer-coarse:text-base"
         />
       </label>
       {showList && (

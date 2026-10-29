@@ -19,12 +19,9 @@ const AppLayout = async ({ children }: LayoutProps<"/">): Promise<React.ReactNod
             aria-label="ChaosCaiet, your dash"
             className="flex h-11 w-11 items-center justify-center rounded"
           >
-            <span
-              aria-hidden="true"
-              className="flex h-9 w-9 items-center justify-center rounded bg-mark-bg font-serif text-xl font-semibold text-mark-fg"
-            >
-              c
-            </span>
+            {/* Decorative: the link's label names it. A static asset, so no next/image. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/chaoscaiet-logo.svg" alt="" aria-hidden="true" width={36} height={36} className="block" />
           </Link>
           <nav className="flex items-center gap-1" aria-label="Main">
             <Link href="/" aria-label="Dash" className="nav-icon">

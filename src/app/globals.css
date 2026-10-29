@@ -31,8 +31,6 @@
   --hairline-ground: rgba(237, 230, 210, 0.24); /* on the ground */
   --control-border: rgba(20, 15, 34, 0.3); /* outline buttons on cards */
   --accent: var(--sage-green);
-  --mark-bg: var(--bone);
-  --mark-fg: var(--muted-indigo);
   --focus-ground: var(--bone);
   --focus-card: var(--indigo-void);
 
@@ -64,8 +62,6 @@
   --hairline: rgba(20, 15, 34, 0.12);
   --hairline-ground: rgba(20, 15, 34, 0.18);
   --accent: #c5dbcb;
-  --mark-bg: var(--indigo-void);
-  --mark-fg: #fbf8f1;
   --focus-ground: var(--indigo-void);
 
   --circle-text: #bdb5e0;
@@ -89,8 +85,6 @@
   --color-hairline: var(--hairline);
   --color-hairline-ground: var(--hairline-ground);
   --color-accent: var(--accent);
-  --color-mark-bg: var(--mark-bg);
-  --color-mark-fg: var(--mark-fg);
   --font-sans: var(--font-sans);
   --font-serif: var(--font-lora), Georgia, serif;
   --font-chat: var(--font-chat);

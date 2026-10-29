@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
+import { ExportButton } from "./export-button";
 import { Markdown } from "./markdown";
 import { photoUrl, tagHref, type Entry } from "@/lib/entry-fields";
 
@@ -105,6 +106,7 @@ export const Rail = ({
       <Lock size={12} strokeWidth={2} aria-hidden="true" />
       private · only you can see this
     </p>
+    <ExportButton />
   </aside>
 );
 

@@ -153,6 +153,10 @@ export const randomArchiveEntry = async (): Promise<Entry | null> => {
   return row ? toEntry(row) : null;
 };
 
+/** Every entry, oldest first, for the export. */
+export const listAllEntries = async (): Promise<Entry[]> =>
+  (await db.select().from(entries).orderBy(entries.createdAt)).map(toEntry);
+
 export const entryExists = async (id: string): Promise<boolean> =>
   (await db.select({ id: entries.id }).from(entries).where(eq(entries.id, id))).length > 0;
 

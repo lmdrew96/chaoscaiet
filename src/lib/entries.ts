@@ -1,5 +1,5 @@
 import "server-only";
-import { desc, eq, lt } from "drizzle-orm";
+import { and, arrayContains, desc, eq, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { entries } from "@/db/schema";
 import type { Entry, EntryInput, PhotoFields } from "./entry-fields";
@@ -21,14 +21,18 @@ const toEntry = (row: Row): Entry =>
 export const FEED_PAGE_SIZE = 30;
 
 /**
- * Newest first. `before` is the createdAt of the last entry on the previous
- * page; `nextBefore` is null when there's nothing older.
+ * Newest first, optionally only entries with `tag`. `before` is the createdAt
+ * of the last entry on the previous page; `nextBefore` is null when there's
+ * nothing older.
  */
-export const listFeed = async (before?: Date): Promise<{ entries: Entry[]; nextBefore: string | null }> => {
+export const listFeed = async ({
+  before,
+  tag,
+}: { before?: Date; tag?: string } = {}): Promise<{ entries: Entry[]; nextBefore: string | null }> => {
   const rows = await db
     .select()
     .from(entries)
-    .where(before ? lt(entries.createdAt, before) : undefined)
+    .where(and(before ? lt(entries.createdAt, before) : undefined, tag ? arrayContains(entries.tags, [tag]) : undefined))
     .orderBy(desc(entries.createdAt))
     .limit(FEED_PAGE_SIZE + 1);
   const page = rows.slice(0, FEED_PAGE_SIZE).map(toEntry);
@@ -36,8 +40,19 @@ export const listFeed = async (before?: Date): Promise<{ entries: Entry[]; nextB
 };
 
 export const createEntry = async (input: EntryInput): Promise<Entry> => {
-  const [row] = await db.insert(entries).values({ type: input.type, fields: input.fields }).returning();
+  const [row] = await db
+    .insert(entries)
+    .values({ type: input.type, fields: input.fields, tags: input.tags })
+    .returning();
   return toEntry(row);
+};
+
+/** Every tag with how many entries use it, most used first. Feeds the rail, the tags page and autocomplete. */
+export const listTags = async (): Promise<{ tag: string; count: number }[]> => {
+  const result = await db.execute<{ tag: string; count: number }>(
+    sql`select t as tag, count(*)::int as count from ${entries}, unnest(${entries.tags}) as t group by t order by count desc, t`,
+  );
+  return result.rows;
 };
 
 const photoKeyOf = (e: { type: string; fields: unknown }): string | null =>
@@ -58,7 +73,7 @@ export const updateEntry = async (id: string, input: EntryInput): Promise<Entry 
   if (!previous) return null;
   const [row] = await db
     .update(entries)
-    .set({ type: input.type, fields: input.fields, updatedAt: new Date() })
+    .set({ type: input.type, fields: input.fields, tags: input.tags, updatedAt: new Date() })
     .where(eq(entries.id, id))
     .returning();
   if (!row) return null;

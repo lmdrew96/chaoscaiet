@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Hash, House } from "lucide-react";
 import { ownerFromCookies } from "@/lib/auth";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LogoutButton } from "@/components/logout-button";
@@ -26,6 +27,12 @@ const AppLayout = async ({ children }: LayoutProps<"/">): Promise<React.ReactNod
             </span>
           </Link>
           <nav className="flex items-center gap-1" aria-label="Main">
+            <Link href="/" aria-label="Dash" className="nav-icon">
+              <House size={24} strokeWidth={2} />
+            </Link>
+            <Link href="/tags" aria-label="Tags" className="nav-icon">
+              <Hash size={24} strokeWidth={2} />
+            </Link>
             <ThemeToggle />
             <LogoutButton />
             <WriteButton />

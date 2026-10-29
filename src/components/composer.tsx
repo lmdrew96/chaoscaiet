@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "
 import { Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { PostTypeBar } from "./post-type-bar";
+import { TagInput } from "./tag-input";
 import { readJson } from "@/lib/read-json";
 import {
   MAX_PHOTO_BYTES,
@@ -29,6 +30,9 @@ interface Draft {
   url: string;
   lines: ChatLine[];
   photo: DraftPhoto;
+  tags: string[];
+  /** A tag still being typed. It counts as a tag when the entry posts. */
+  tagText: string;
 }
 
 /** `key` once it's in the bucket; `file` while it's only been chosen. */
@@ -53,10 +57,12 @@ const emptyDraft = (): Draft => ({
   url: "",
   lines: blankLines(),
   photo: noPhoto,
+  tags: [],
+  tagText: "",
 });
 
 const draftFrom = (e: EntryInput): Draft => {
-  const d = emptyDraft();
+  const d = { ...emptyDraft(), tags: e.tags };
   switch (e.type) {
     case "text":
       return { ...d, title: e.fields.title ?? "", body: e.fields.body };
@@ -71,7 +77,12 @@ const draftFrom = (e: EntryInput): Draft => {
   }
 };
 
-const payloadFor = (type: EntryType, d: Draft): { type: EntryType; fields: unknown } => {
+const payloadFor = (type: EntryType, d: Draft): { type: EntryType; fields: unknown; tags: string[] } => ({
+  ...fieldsFor(type, d),
+  tags: [...d.tags, d.tagText],
+});
+
+const fieldsFor = (type: EntryType, d: Draft): { type: EntryType; fields: unknown } => {
   switch (type) {
     case "text":
       return { type, fields: { title: d.title, body: d.body } };
@@ -87,8 +98,8 @@ const payloadFor = (type: EntryType, d: Draft): { type: EntryType; fields: unkno
 };
 
 const hasText = (d: Draft): boolean =>
-  Boolean(d.photo.file || d.photo.key) ||
-  [d.title, d.body, d.quote, d.source, d.url, ...d.lines.flatMap((l) => [l.speaker, l.text])].some((s) => s.trim());
+  Boolean(d.photo.file || d.photo.key || d.tags.length) ||
+  [d.tagText, d.title, d.body, d.quote, d.source, d.url, ...d.lines.flatMap((l) => [l.speaker, l.text])].some((s) => s.trim());
 
 const sameDraft = (a: Draft, b: Draft): boolean =>
   a.photo.file === b.photo.file &&
@@ -108,8 +119,11 @@ const lineInput = "min-h-11 min-w-0 flex-auto border-0 border-b border-hairline 
 export const Composer = ({
   editing,
   startOpen = false,
+  knownTags,
   onDone,
 }: {
+  /** Existing tags, most used first, for autocomplete. */
+  knownTags: string[];
   /** Edit mode: the entry being changed. Without it, this is the dash's new-post editor. */
   editing?: Entry;
   startOpen?: boolean;
@@ -484,6 +498,14 @@ export const Composer = ({
               </button>
             </div>
           )}
+
+          <TagInput
+            tags={draft.tags}
+            text={draft.tagText}
+            known={knownTags}
+            onTags={(tags) => set("tags", tags)}
+            onText={(text) => set("tagText", text)}
+          />
 
           {editing?.type === "photo" && type !== "photo" && (
             <p className="m-0 px-5 pb-2 text-sm">Saving this as a {type} post removes the photo.</p>

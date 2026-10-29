@@ -39,17 +39,19 @@ export interface PhotoFields {
 
 export type EntryFields = TextFields | QuoteFields | ChatFields | LinkFields | PhotoFields;
 
-export type EntryInput =
+export type EntryContent =
   | { type: "text"; fields: TextFields }
   | { type: "quote"; fields: QuoteFields }
   | { type: "chat"; fields: ChatFields }
   | { type: "link"; fields: LinkFields }
   | { type: "photo"; fields: PhotoFields };
 
+/** What compose sends: the type's fields plus tags (normalized; see normalizeTag). */
+export type EntryInput = EntryContent & { tags: string[] };
+
 /** What the API sends and the feed renders. Timestamps are ISO strings in UTC. */
 export type Entry = EntryInput & {
   id: string;
-  tags: string[];
   layerOf: string | null;
   createdAt: string;
   updatedAt: string;
@@ -80,7 +82,21 @@ const MAX_SHORT = 1_000;
 const MAX_URL = 2_000;
 const MAX_CHAT_LINES = 200;
 
+// ─── Tags ────────────────────────────────────────────────────────────────────
+
+const MAX_TAGS = 30;
+const MAX_TAG_LENGTH = 100;
+
+/** "#Nugget  Being a Menace " → "nugget being a menace". Spaces stay; case and extra whitespace don't. */
+export const normalizeTag = (raw: string): string => raw.replace(/^#+/, "").trim().toLowerCase().replace(/\s+/g, " ");
+
+/** Normalized, empty ones dropped, duplicates removed, order kept. */
+export const normalizeTags = (raw: readonly string[]): string[] => [...new Set(raw.map(normalizeTag).filter(Boolean))];
+
+export const tagHref = (tag: string): string => `/tagged/${encodeURIComponent(tag)}`;
+
 type Result = { ok: true; value: EntryInput } | { ok: false; error: string };
+type FieldsResult = { ok: true; value: EntryContent } | { ok: false; error: string };
 
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 
@@ -110,6 +126,15 @@ const tooLong = (value: string | undefined, max: number): boolean => (value?.len
 
 export const validateEntry = (raw: unknown): Result => {
   if (!raw || typeof raw !== "object") return { ok: false, error: "Malformed entry." };
+  const rawTags = (raw as { tags?: unknown }).tags;
+  const tags = normalizeTags(Array.isArray(rawTags) ? rawTags.map(str) : []);
+  if (tags.length > MAX_TAGS) return { ok: false, error: `That's a lot of tags. Keep it to ${MAX_TAGS}.` };
+  if (tags.some((t) => t.length > MAX_TAG_LENGTH)) return { ok: false, error: "One of those tags is too long." };
+  const content = validateFields(raw);
+  return content.ok ? { ok: true, value: { ...content.value, tags } } : content;
+};
+
+const validateFields = (raw: object): FieldsResult => {
   const { type, fields } = raw as { type?: unknown; fields?: unknown };
   const f = (fields && typeof fields === "object" ? fields : {}) as Record<string, unknown>;
 

@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2 } from "lucide-react";
 import { Composer } from "./composer";
 import { Markdown } from "./markdown";
 import { TYPE_META } from "./post-type-bar";
 import { readJson } from "@/lib/read-json";
-import { photoUrl, type Entry } from "@/lib/entry-fields";
+import { photoUrl, tagHref, type Entry } from "@/lib/entry-fields";
 
 const linkLabel = (url: string): string => {
   try {
@@ -94,7 +95,15 @@ const iconButton =
 const outlineButton = "min-h-11 cursor-pointer rounded border border-[var(--control-border)] px-4 text-sm";
 
 /** One entry in the feed, with the square beside it. Edits and deletes in place. */
-export const EntryCard = ({ entry: initial, when }: { entry: Entry; when: string }): React.ReactNode => {
+export const EntryCard = ({
+  entry: initial,
+  when,
+  knownTags,
+}: {
+  entry: Entry;
+  when: string;
+  knownTags: string[];
+}): React.ReactNode => {
   const router = useRouter();
   // The saved copy shows right away; the feed's refresh then re-keys this card.
   const [entry, setEntry] = useState(initial);
@@ -135,6 +144,7 @@ export const EntryCard = ({ entry: initial, when }: { entry: Entry; when: string
         {mode === "edit" ? (
           <Composer
             editing={entry}
+            knownTags={knownTags}
             onDone={(saved) => {
               if (saved) setEntry(saved);
               setMode("view");
@@ -146,6 +156,17 @@ export const EntryCard = ({ entry: initial, when }: { entry: Entry; when: string
               <b>you</b>
             </div>
             <Body entry={entry} />
+            {entry.tags.length > 0 && (
+              <ul className="m-0 flex list-none flex-wrap gap-x-2 px-5 pb-3 text-[13px]" aria-label="Tags">
+                {entry.tags.map((tag) => (
+                  <li key={tag}>
+                    <Link href={tagHref(tag)} className="text-ink-secondary hover:underline">
+                      #{tag}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
             {error && (
               <p role="alert" className="m-0 px-5 pb-2 text-sm">
                 {error}

@@ -93,6 +93,66 @@ export const listFeed = async ({
   };
 };
 
+/** One entry with its chain, for the entry page. Null when there's no such entry. */
+export const getFeedItem = async (id: string): Promise<FeedItem | null> => {
+  const [row] = await db.select().from(entries).where(eq(entries.id, id));
+  return row ? (await withAncestors([toEntry(row)]))[0] : null;
+};
+
+const ON_THIS_DAY_MAX = 10;
+
+/**
+ * Chains with an entry written on today's month-day (in `tz`) in an earlier
+ * year, newest year first, each as its newest layer. A chain layered on today
+ * is left out: it's already at the top of the feed. `yearsAgo` counts from
+ * the oldest match in the chain.
+ */
+export const listOnThisDay = async (tz: string, now = new Date()): Promise<(FeedItem & { yearsAgo: number })[]> => {
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: tz }).format(now); // YYYY-MM-DD
+  const year = Number(today.slice(0, 4));
+  const monthDay = today.slice(5);
+  const result = await db.execute<{ leaf: string; year: number }>(sql`
+    with recursive chain(id, leaf, parent, depth) as (
+      select id, id, layer_of, 0 from ${entries} where ${hasNoLayers}
+      union all
+      select e.id, c.leaf, e.layer_of, c.depth + 1
+      from entries e join chain c on e.id = c.parent
+      where c.depth < ${MAX_CHAIN}
+    )
+    select c.leaf, min(extract(year from (e.created_at at time zone ${tz})))::int as year
+    from chain c
+    join entries e on e.id = c.id
+    join entries l on l.id = c.leaf
+    where to_char(e.created_at at time zone ${tz}, 'MM-DD') = ${monthDay}
+      and extract(year from (e.created_at at time zone ${tz})) < ${year}
+      and (l.created_at at time zone ${tz})::date < ${today}::date
+    group by c.leaf
+    order by year desc
+    limit ${ON_THIS_DAY_MAX}`);
+  const matches = result.rows;
+  if (matches.length === 0) return [];
+
+  const rows = await db.select().from(entries).where(inArray(entries.id, matches.map((m) => m.leaf)));
+  const byId = new Map(rows.map((r) => [r.id, toEntry(r)]));
+  const leaves = matches.map((m) => byId.get(m.leaf)).filter((e): e is Entry => Boolean(e));
+  const items = await withAncestors(leaves);
+  return items.map((item) => ({
+    ...item,
+    yearsAgo: year - matches.find((m) => m.leaf === item.entry.id)!.year,
+  }));
+};
+
+/** One random entry older than 30 days, at the newest layer of its chain. Null when there's none yet. */
+export const randomArchiveEntry = async (): Promise<Entry | null> => {
+  const [row] = await db
+    .select()
+    .from(entries)
+    .where(and(hasNoLayers, lt(entries.createdAt, sql`now() - interval '30 days'`)))
+    .orderBy(sql`random()`)
+    .limit(1);
+  return row ? toEntry(row) : null;
+};
+
 export const entryExists = async (id: string): Promise<boolean> =>
   (await db.select({ id: entries.id }).from(entries).where(eq(entries.id, id))).length > 0;
 

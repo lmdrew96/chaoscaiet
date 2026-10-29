@@ -3,6 +3,31 @@ import { EntryCard } from "./entry-card";
 import type { FeedItem } from "@/lib/entries";
 import { formatDay, formatWhen } from "@/lib/time";
 
+/** Re-keys a card when its entry or chain changes, so a refresh shows the saved copy. */
+export const feedCardKey = ({ entry, ancestors }: FeedItem): string =>
+  `${entry.id}:${entry.updatedAt}:${ancestors.length}`;
+
+/** One feed item as a card, with its dates formatted in Nae's timezone. */
+export const FeedCard = ({
+  item: { entry, ancestors },
+  tz,
+  knownTags,
+  ...rest
+}: {
+  item: FeedItem;
+  tz: string;
+  knownTags: string[];
+} & Pick<React.ComponentProps<typeof EntryCard>, "highlight" | "startLayer" | "layeredHref">): React.ReactNode => (
+  <EntryCard
+    entry={entry}
+    when={formatWhen(entry.createdAt, tz)}
+    day={formatDay(entry.createdAt, tz)}
+    ancestors={ancestors.map((a) => ({ entry: a, day: formatDay(a.createdAt, tz) }))}
+    knownTags={knownTags}
+    {...rest}
+  />
+);
+
 /** A page of entry cards with older/newer links. Shared by the dash and tag pages. */
 export const Feed = ({
   items,
@@ -22,15 +47,8 @@ export const Feed = ({
 }): React.ReactNode => (
   <>
     {/* No entries means nothing here: no empty state, nothing that scolds. */}
-    {items.map(({ entry, ancestors }) => (
-      <EntryCard
-        key={`${entry.id}:${entry.updatedAt}:${ancestors.length}`}
-        entry={entry}
-        when={formatWhen(entry.createdAt, tz)}
-        day={formatDay(entry.createdAt, tz)}
-        ancestors={ancestors.map((a) => ({ entry: a, day: formatDay(a.createdAt, tz) }))}
-        knownTags={knownTags}
-      />
+    {items.map((item) => (
+      <FeedCard key={feedCardKey(item)} item={item} tz={tz} knownTags={knownTags} />
     ))}
 
     {(nextBefore || before) && (

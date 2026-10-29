@@ -237,6 +237,14 @@ textarea,
 input {
   color: inherit;
 }
+
+/* Breathing room inside compose fields. Their containers sit 8px further in,
+   so the typed text still lines up with the card's 20px edge. */
+.compose-fields input,
+.compose-fields textarea {
+  padding: 6px 8px;
+  border-radius: 4px;
+}
 textarea:focus-visible,
 input:focus-visible {
   outline-offset: 0;

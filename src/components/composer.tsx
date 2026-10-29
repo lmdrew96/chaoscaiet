@@ -192,7 +192,7 @@ export const Composer = ({
           </div>
 
           {type === "text" && (
-            <div className="flex flex-col gap-1 px-5 pt-1 pb-2">
+            <div className="compose-fields flex flex-col gap-1 px-3 pt-1 pb-2">
               <label className="flex">
                 <span className={SR}>Title (optional)</span>
                 <input
@@ -218,7 +218,7 @@ export const Composer = ({
           )}
 
           {type === "quote" && (
-            <div className="flex flex-col gap-2 px-5 py-2">
+            <div className="compose-fields flex flex-col gap-2 px-3 py-2">
               <label className="flex">
                 <span className={SR}>Quote</span>
                 <textarea
@@ -244,7 +244,7 @@ export const Composer = ({
           )}
 
           {type === "link" && (
-            <div className="flex flex-col gap-2 px-5 py-2">
+            <div className="compose-fields flex flex-col gap-2 px-3 py-2">
               <label className="flex">
                 <span className={SR}>Link</span>
                 <input
@@ -282,7 +282,7 @@ export const Composer = ({
           )}
 
           {type === "chat" && (
-            <div className="flex flex-col gap-1.5 px-5 py-2 font-chat text-sm">
+            <div className="compose-fields flex flex-col gap-1.5 px-3 py-2 font-chat text-sm">
               {draft.lines.map((line, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <label className="flex w-[140px] shrink-0 max-sm:w-[96px]">
@@ -311,7 +311,7 @@ export const Composer = ({
               <button
                 type="button"
                 onClick={() => set("lines", [...draft.lines, { speaker: "", text: "" }])}
-                className="min-h-11 cursor-pointer self-start font-sans text-[13px] underline"
+                className="ml-2 min-h-11 cursor-pointer self-start font-sans text-[13px] underline"
               >
                 + add a line
               </button>
